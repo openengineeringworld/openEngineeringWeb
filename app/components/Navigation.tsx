@@ -74,10 +74,22 @@ export default function Navigation() {
           <Image
             src="/white-logo.png"
             alt="Open Engineering logo"
-            width={64}
-            height={64}
+            width={48}
+            height={48}
             priority
-            className="h-12 w-auto object-contain sm:h-14 lg:h-16"
+            className={`h-10 w-auto object-contain sm:h-11 lg:h-12 ${
+              menuOpen ? "hidden md:block" : "block"
+            }`}
+          />
+          <Image
+            src="/logo-purple.png"
+            alt="Open Engineering logo"
+            width={48}
+            height={48}
+            priority
+            className={`h-10 w-auto object-contain sm:h-11 lg:h-12 ${
+              menuOpen ? "block md:hidden" : "hidden"
+            }`}
           />
         </Link>
 
