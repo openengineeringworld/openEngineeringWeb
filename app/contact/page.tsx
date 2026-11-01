@@ -160,10 +160,10 @@ export default function Contact() {
             Let’s build something great
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-400 font-mono">
+          {/* <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-400 font-mono">
             Have an idea, a question, or a project in mind? We’d love to hear
             from you.
-          </p>
+          </p> */}
         </motion.div>
 
         <div className="mt-14 grid items-stretch gap-8 md:grid-cols-2">
@@ -182,10 +182,10 @@ export default function Contact() {
               Connect with us
             </h2>
 
-            <p className="mt-3 max-w-sm leading-7 text-gray-400 font-mono">
+            {/* <p className="mt-3 max-w-sm leading-7 text-gray-400 font-mono">
               Whether you want to collaborate, share feedback, or learn more
               about Open Engineering, reach out.
-            </p>
+            </p> */}
 
             <motion.ul
               variants={container}
@@ -239,9 +239,9 @@ export default function Contact() {
               })}
             </motion.ul>
 
-            <p className="mt-auto pt-8 text-sm text-gray-500">
+            {/* <p className="mt-auto pt-8 text-sm text-gray-500">
               Open Engineering. Making technology accessible for all.
-            </p>
+            </p> */}
           </motion.section>
 
           {/* Contact form */}
@@ -319,9 +319,9 @@ export default function Contact() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <p className="mt-3 leading-7 text-gray-400 font-mono">
+                  {/* <p className="mt-3 leading-7 text-gray-400 font-mono">
                     Fill in the details below and tell us how we can help.
-                  </p>
+                  </p> */}
 
                   <div className="mt-9 space-y-5">
                     <div>
