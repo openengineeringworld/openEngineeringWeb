@@ -21,7 +21,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 type ContentBlock = {
   id: string; // used for the #anchor link
-  label: string; // vertical text in the left rail
+  label: string; // centered label above the text
   ghost: string; // big faint text drifting behind the block
   text: string; // main statement, revealed word by word on scroll
   badge?: string; // optional small pill above the text
@@ -109,7 +109,7 @@ function ScrollWord({
     <motion.span
       aria-hidden="true"
       style={{ opacity, y }}
-      className="mr-[0.3em] inline-block"
+      className="mx-[0.15em] inline-block"
     >
       {word}
     </motion.span>
@@ -147,8 +147,8 @@ function ScrollText({
 }
 
 /**
- * Editorial section: ghost text that drifts with scroll, a left rail with a
- * vertical label and a progress line, and content on the right.
+ * Editorial section: ghost text that drifts with scroll, and a centered
+ * column with a label, a horizontal progress line and the content.
  */
 function Section({
   id,
@@ -175,13 +175,12 @@ function Section({
       id={id}
       ref={ref}
       aria-label={label}
-      className="relative isolate flex min-h-screen items-center overflow-hidden bg-background px-6 py-24 text-foreground"
+      className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-background px-6 py-24 text-foreground"
     >
-      {/* Ghost text: wrapper handles centering, motion.div handles parallax,
-          so Tailwind and Framer transforms never fight. */}
+      {/* Ghost text, centered, still drifts horizontally on scroll */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 left-0 flex items-center"
+        className="pointer-events-none absolute inset-0 flex items-center justify-center"
       >
         <motion.div
           style={reduceMotion ? undefined : { x: ghostX }}
@@ -191,24 +190,19 @@ function Section({
         </motion.div>
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl">
-        {/* Left rail (hidden on small screens) */}
-        <div className="hidden flex-col items-center justify-center border-r border-border pr-16 md:flex">
-          <span
-            className="font-mono text-xs uppercase tracking-widest text-muted-foreground"
-            style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
-          >
-            {label}
-          </span>
-          <div className="relative mt-8 h-32 w-px bg-border">
-            <motion.div
-              style={reduceMotion ? { scaleY: 1 } : { scaleY: railScale }}
-              className="absolute left-0 top-0 h-full w-full origin-top bg-foreground"
-            />
-          </div>
+      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center text-center">
+        {/* Label + horizontal progress line */}
+        <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+          {label}
+        </span>
+        <div className="relative mb-12 mt-4 h-px w-32 bg-border">
+          <motion.div
+            style={reduceMotion ? { scaleX: 1 } : { scaleX: railScale }}
+            className="absolute left-0 top-0 h-full w-full origin-left bg-foreground"
+          />
         </div>
 
-        <div className="flex-1 md:pl-16">{children}</div>
+        {children}
       </div>
     </section>
   );
@@ -226,7 +220,7 @@ function ContentSection({ block }: { block: ContentBlock }) {
   return (
     <Section id={id} label={label} ghost={ghost}>
       {badge && (
-        <div className="mb-8">
+        <div className="mb-8 flex justify-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 font-mono text-xs text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-accent" />
             {badge}
@@ -235,7 +229,7 @@ function ContentSection({ block }: { block: ContentBlock }) {
       )}
       <ScrollText
         text={text}
-        className={`${textSize} font-light leading-[1.15] tracking-tight text-foreground`}
+        className={`${textSize} text-center font-light leading-[1.15] tracking-tight text-foreground`}
       />
       {showLine && (
         <motion.div
@@ -243,8 +237,8 @@ function ContentSection({ block }: { block: ContentBlock }) {
           whileInView={{ scaleX: 1 }}
           viewport={{ once: true, margin: "-20%" }}
           transition={{ duration: 0.8, ease: EASE }}
-          style={{ originX: 0 }}
-          className="mt-12 h-px w-24 bg-foreground"
+          style={{ originX: 0.5 }}
+          className="mx-auto mt-12 h-px w-24 bg-foreground"
         />
       )}
     </Section>
@@ -350,8 +344,11 @@ export default function Homepage1() {
         {BLOCKS.map((block) => (
           <ContentSection key={block.id} block={block} />
         ))}
-        
-        
+
+        {/* Uncomment to show the marquee and the contact buttons:
+        <Ticker />
+        <ContactSection />
+        */}
       </main>
     </MotionConfig>
   );
