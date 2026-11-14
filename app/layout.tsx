@@ -4,6 +4,7 @@ import "./globals.css";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import Spotlight from "./components/ui/Spotlight";
+import NotificationPermission from "./components/NotificationPermission";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Navigation />
         {children}
          <Footer />
+         <NotificationPermission />
          
       </body>
     </html>
