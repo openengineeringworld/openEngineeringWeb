@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AnimatePresence,
   motion,
   useReducedMotion,
-  type Variants,
 } from "framer-motion";
 import {
   Bell,
@@ -17,152 +16,93 @@ import {
   ExternalLink,
   Info,
   RefreshCw,
-  Sparkles,
-  ShieldCheck,
   Trash2,
-  Users,
-  Zap,
 } from "lucide-react";
 import { FaWhatsapp, FaLinkedinIn } from "react-icons/fa";
 import Spotlight from "../components/ui/Spotlight";
 
-type NotificationCategory = "all" | "products" | "announcements" | "system";
+import type { NotificationCategory, NotificationItem } from "./notification-types";
 
-interface NotificationItem {
-  id: string;
-  title: string;
-  description: string;
-  category: "products" | "announcements" | "system";
-  badge: string;
-  badgeColor: string;
-  time: string;
-  read: boolean;
-  action?: {
-    label: string;
-    href: string;
-    external?: boolean;
-  };
-  icon: "sparkles" | "bell" | "shield" | "users" | "zap";
-}
-
-const initialNotifications: NotificationItem[] = [
-  {
-    id: "notif-1",
-    title: "Secretary AI v0.2 Early Access is Live",
-    description:
-      "Secretary early access invites are now rolling out for registered testers. Experience smart inbox triage, calendar coordination, and automated note-taking.",
-    category: "products",
-    badge: "Product Update",
-    badgeColor: "border-purple-400/30 bg-purple-500/10 text-purple-300",
-    time: "15m ago",
-    read: false,
-    action: {
-      label: "Explore Secretary",
-      href: "/secretary",
-    },
-    icon: "sparkles",
-  },
-  {
-    id: "notif-2",
-    title: "Community Milestone: 1,000+ Engineers",
-    description:
-      "Our Open Engineering developer ecosystem has officially grown to over 1,000 passionate builders across our channels. Thank you for shaping the mission with us!",
-    category: "announcements",
-    badge: "Community",
-    badgeColor: "border-amber-400/30 bg-amber-500/10 text-amber-300",
-    time: "2 hours ago",
-    read: false,
-    action: {
-      label: "About Our Mission",
-      href: "/about",
-    },
-    icon: "users",
-  },
-  {
-    id: "notif-3",
-    title: "Global Edge Infrastructure Deployed",
-    description:
-      "We've updated our edge nodes in South Asia and Southeast Asia, reducing asset delivery latency by over 35%. All platform services operating with 100% uptime.",
-    category: "system",
-    badge: "Infrastructure",
-    badgeColor: "border-emerald-400/30 bg-emerald-500/10 text-emerald-300",
-    time: "1 day ago",
-    read: false,
-    icon: "shield",
-  },
-  {
-    id: "notif-4",
-    title: "Interactive Open Engineering Roadmap Q2",
-    description:
-      "Take a look at what we're building next: modular developer utilities, new open-source libraries, and practical AI tools for everyday engineering challenges.",
-    category: "products",
-    badge: "Roadmap",
-    badgeColor: "border-cyan-400/30 bg-cyan-500/10 text-cyan-300",
-    time: "2 days ago",
-    read: true,
-    action: {
-      label: "View Products",
-      href: "/products",
-    },
-    icon: "zap",
-  },
-  {
-    id: "notif-5",
-    title: "Official WhatsApp Channel Announcement",
-    description:
-      "Stay in the loop with weekly engineering insights, early project previews, and direct community polls directly on our WhatsApp Channel.",
-    category: "announcements",
-    badge: "Announcement",
-    badgeColor: "border-purple-400/30 bg-purple-500/10 text-purple-300",
-    time: "4 days ago",
-    read: true,
-    action: {
-      label: "Join WhatsApp Channel",
-      href: "https://whatsapp.com/channel/0029Vb5J1mP3QxRwDLNrsh02",
-      external: true,
-    },
-    icon: "bell",
-  },
-];
-
-const ease = [0.22, 1, 0.36, 1] as const;
-
-const containerVariants: Variants = {
-  hidden: {},
-  show: {
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease } },
-  exit: { opacity: 0, scale: 0.96, transition: { duration: 0.25 } },
-};
-
-function renderIcon(icon: NotificationItem["icon"]) {
-  switch (icon) {
-    case "sparkles":
-      return <Sparkles className="h-5 w-5 text-purple-400" />;
-    case "users":
-      return <Users className="h-5 w-5 text-amber-400" />;
-    case "shield":
-      return <ShieldCheck className="h-5 w-5 text-emerald-400" />;
-    case "zap":
-      return <Zap className="h-5 w-5 text-cyan-400" />;
-    default:
-      return <Bell className="h-5 w-5 text-purple-300" />;
-  }
-}
+import { containerVariants, itemVariants } from "./notification-animations";
+import { renderIcon } from "./notification-icons";
 
 export default function NotificationPage() {
   const reduceMotion = useReducedMotion();
-  const [notifications, setNotifications] =
-    useState<NotificationItem[]>(initialNotifications);
-  const [filter, setFilter] = useState<NotificationCategory | "unread">("all");
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+const [defaultNotifications, setDefaultNotifications] = useState<NotificationItem[]>([]);
+const [filter, setFilter] = useState<NotificationCategory | "unread">("all");
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState<string | null>(null);
+
+useEffect(() => {
+  if (loading || error) return;
+
+  const readIds = notifications
+    .filter((item) => item.read)
+    .map((item) => item.id);
+
+  const visibleIds = new Set(notifications.map((item) => item.id));
+
+  const dismissedIds = defaultNotifications
+    .filter((item) => !visibleIds.has(item.id))
+    .map((item) => item.id);
+
+  localStorage.setItem(
+    "oe_notification_preferences",
+    JSON.stringify({
+      readIds,
+      dismissedIds,
+    })
+  );
+}, [notifications, defaultNotifications, loading, error]);
+
+useEffect(() => {
+  async function fetchNotifications() {
+    try {
+      const response = await fetch("/api/notifications");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch notifications");
+      }
+
+      const data = await response.json();
+
+      setDefaultNotifications(data.notifications);
+
+let readIds: string[] = [];
+let dismissedIds: string[] = [];
+
+try {
+  const saved = localStorage.getItem("oe_notification_preferences");
+
+  if (saved) {
+    const preferences = JSON.parse(saved);
+    readIds = preferences.readIds ?? [];
+    dismissedIds = preferences.dismissedIds ?? [];
+  }
+} catch {
+  console.error("Could not load notification preferences");
+}
+
+const restoredNotifications = data.notifications
+  .filter((item: NotificationItem) => !dismissedIds.includes(item.id))
+  .map((item: NotificationItem) => ({
+    ...item,
+    read: readIds.includes(item.id),
+  }));
+
+setNotifications(restoredNotifications);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  fetchNotifications();
+}, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -187,8 +127,9 @@ export default function NotificationPage() {
   };
 
   const resetAllNotifications = () => {
-    setNotifications(initialNotifications);
-  };
+  localStorage.removeItem("oe_notification_preferences");
+  setNotifications(defaultNotifications);
+};
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-background px-4 py-16 font-mono text-foreground sm:px-6 sm:py-24">
@@ -356,7 +297,7 @@ export default function NotificationPage() {
               </button>
             )}
 
-            {notifications.length < initialNotifications.length && (
+            {notifications.length < defaultNotifications.length && (
               <button
                 type="button"
                 onClick={resetAllNotifications}
@@ -385,6 +326,9 @@ export default function NotificationPage() {
                   variants={itemVariants}
                   layout
                   exit="exit"
+                  onClick={() => {
+                    if (!item.read) toggleRead(item.id);
+                    }}
                   className={`group relative overflow-hidden rounded-2xl border p-5 backdrop-blur-md transition-all duration-300 ${
                     !item.read
                       ? "border-purple-400/40 bg-purple-950/15 shadow-[0_0_20px_-5px_rgba(168,85,247,0.15)]"
@@ -470,7 +414,10 @@ export default function NotificationPage() {
 
                         <button
                           type="button"
-                          onClick={() => toggleRead(item.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleRead(item.id);
+                          }}
                           className="inline-flex items-center gap-1 text-xs text-gray-400 transition hover:text-white"
                         >
                           <Check size={13} />
@@ -526,7 +473,7 @@ export default function NotificationPage() {
                     View All Notifications
                   </button>
 
-                  {notifications.length < initialNotifications.length && (
+                  {notifications.length < defaultNotifications.length && (
                     <button
                       type="button"
                       onClick={resetAllNotifications}

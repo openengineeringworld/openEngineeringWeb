@@ -18,6 +18,7 @@ type Member = {
 const team: Member[] = [
   { name: "Rubul Hoque Choudhory", role: "Founder" },
   { name: "Prachurjya Kakati", role: "Engineering" },
+  { name: "Pranoy Raj Medhi", role: "Engineering" }
 ];
 
 function initials(name: string) {
